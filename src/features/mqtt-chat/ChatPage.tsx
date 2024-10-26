@@ -23,14 +23,14 @@ export const ChatPage = () => {
   }, [dispatch, username])
 
   return (
-    <div className="flex flex-col  h-screen w-full  ">
-      <div className="flex flex-row w-full items-baseline justify-between px-4 py-2">
+    <div className="flex flex-col h-dvh w-full">
+      <div className="flex flex-row w-full h-1/12 items-baseline justify-between px-4 py-2">
         <span className="text-2xl font-bold tracking-wide">MQTT Chat</span>
         <Button variant={"outline"} onClick={() => dispatch(disconnect())}>
           Logout
         </Button>
       </div>
-      <div className="flex flex-row space-x-4 px-4 w-full h-full">
+      <div className="flex flex-row space-x-4 px-4 w-full h-11/12">
         <div className="w-1/3">
           <ChatList activeChat={activeChat} setActiveChat={setActiveChat} />
         </div>

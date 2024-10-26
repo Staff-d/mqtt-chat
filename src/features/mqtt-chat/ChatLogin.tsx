@@ -31,7 +31,7 @@ export const ChatLogin: FC = () => {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
-  const [useAuthentication, setUseAuthentication] = useState(false)
+  const [useAuthentication, setUseAuthentication] = useState(true)
   const [subscribeQos2, setsubscribeQos2] = useState(false)
   const [deduplicateMessages, setDeduplicateMessages] = useState(false)
 

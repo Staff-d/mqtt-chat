@@ -19,7 +19,7 @@ import {
   chatParticipants,
   chatUserState,
   mqttUsername,
-  sendMessage,
+  sendChatMessage,
 } from "@/features/mqtt-chat/mqttChatSlice"
 import { Badge } from "@/components/ui/badge"
 import { DateTime } from "luxon"
@@ -56,7 +56,7 @@ export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
 
     const now = new Date()
     dispatch(
-      sendMessage(
+      sendChatMessage(
         {
           content: trimmedMessage,
           timestamp: now.toISOString(),

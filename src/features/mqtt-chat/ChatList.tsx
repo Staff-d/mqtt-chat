@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import type { FC } from "react"
 import { useAppSelector } from "@/app/hooks"
@@ -26,14 +24,10 @@ export const ChatList: FC<ComponentProps> = ({ setActiveChat, activeChat }) => {
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Chats</CardTitle>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search chats" className="pl-8" />
-        </div>
         <AddChatButton />
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-8rem)] px-2">
+        <ScrollArea className="h-full px-2">
           {chats.map(({ chatId, chat }) => (
             <div
               key={chatId}

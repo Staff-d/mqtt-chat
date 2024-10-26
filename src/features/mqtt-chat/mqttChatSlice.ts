@@ -151,11 +151,19 @@ export const chatParticipants = createSelector(
   (chatMessages, chatId) => chatMessages[chatId].participants || [],
 )
 
-export const subscribeTopic = createAction<string>(
+export const mqttSubscribe = createAction<string>(
   `${mqttChatSlice.name}/subscribeTopic`,
 )
 
-export const messageReceived =
+export const mqttPublish = createAction<{ topic: string; payload: string }>(
+  `${mqttChatSlice.name}/publish`,
+)
+
+export const publishOnlineStatus = createAction<{
+  status: "online" | "offline"
+}>(`${mqttChatSlice.name}/updateStatus`)
+
+export const mqttMessageReceived =
   (topic: string, payload: string): AppThunk =>
   dispatch => {
     const messageTopicMatch = Array.from(
@@ -197,21 +205,13 @@ export const subscribeChatMessages = (): AppThunk => (dispatch, getState) => {
   }
 
   if (user === "admin") {
-    dispatch(subscribeTopic(`chat/messages/+/+`))
+    dispatch(mqttSubscribe(`chat/messages/+/+`))
   } else {
-    dispatch(subscribeTopic(`chat/messages/${user}/+`))
+    dispatch(mqttSubscribe(`chat/messages/${user}/+`))
   }
 }
 
-export const mqttPublish = createAction<{ topic: string; payload: string }>(
-  `${mqttChatSlice.name}/publish`,
-)
-
-export const publishOnlineStatus = createAction<{
-  status: "online" | "offline"
-}>(`${mqttChatSlice.name}/updateStatus`)
-
-export const sendMessage =
+export const sendChatMessage =
   (message: WireMessage, to: string): AppThunk =>
   (dispatch, getState) => {
     const user = mqttUsername(getState())

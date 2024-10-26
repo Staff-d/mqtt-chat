@@ -7,11 +7,11 @@ import {
   connected,
   disconnect,
   disconnected,
-  messageReceived,
+  mqttMessageReceived,
   mqttPublish,
   protocolError,
   publishOnlineStatus,
-  subscribeTopic,
+  mqttSubscribe,
 } from "@/features/mqtt-chat/mqttChatSlice"
 import type { AppDispatch, RootState } from "@/app/store"
 import type {
@@ -153,7 +153,7 @@ typedStartListening({
       const messageString = message.toString("utf-8")
       console.log(topic, messageString)
 
-      api.dispatch(messageReceived(topic, messageString))
+      api.dispatch(mqttMessageReceived(topic, messageString))
     }
 
     try {
@@ -191,7 +191,7 @@ typedStartListening({
 })
 
 typedStartListening({
-  actionCreator: subscribeTopic,
+  actionCreator: mqttSubscribe,
   effect: async (action, api) => {
     const { client } = api.extra
     const subscribeQos = api.getState().mqttChat.settings?.subscribeQos2 ? 2 : 0

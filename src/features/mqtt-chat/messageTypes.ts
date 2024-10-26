@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { type Packet } from "mqtt"
 
 // topic: "chat/messages/{receiver}/{sender}"
 // pub acl: "chat/messages/+/{username}"
@@ -31,3 +32,5 @@ export interface ApplicationSettings {
   subscribeQos2: boolean
   deduplicateMessages: boolean
 }
+
+export type RawMqttPacket = Packet
