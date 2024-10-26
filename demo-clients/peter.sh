@@ -9,13 +9,15 @@ STATUS_PID="$!"
 
 echo "$STATUS_PID"
 function exitTrap() {
+    mosquitto_pub -h localhost -u peter -P test -t chat/status/peter \
+      --retain -q 1 -m '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
     echo "Exiting..."
     kill "$STATUS_PID"
 }
 trap exitTrap SIGINT
 
-#mosquitto_pub -h localhost -u peter -P test -t chat/status/peter \
-#  -q 1 -m '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
+mosquitto_pub -h localhost -u peter -P test -t chat/status/peter \
+  --retain -q 1 -m '{"status":"online","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
 
 LAST_MESSAGE=''
 while true; do

@@ -6,7 +6,7 @@ import { z } from "zod"
 export const wireMessageSchema = z.object({
   messageId: z.string(),
   content: z.string(),
-  timestamp: z.string().datetime({offset:true}),
+  timestamp: z.string().datetime({ offset: true }),
 })
 
 export type WireMessage = z.infer<typeof wireMessageSchema>
@@ -14,7 +14,7 @@ export type Message = WireMessage & { sender: string; receiver: string }
 
 export const wireStatusMessageSchema = z.object({
   status: z.enum(["online", "offline"]),
-  lastOnlineTimestamp: z.string().datetime({offset:true}),
+  lastOnlineTimestamp: z.string().datetime({ offset: true }),
 })
 
 export type WireStatusMessage = z.infer<typeof wireStatusMessageSchema>

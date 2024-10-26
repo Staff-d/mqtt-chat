@@ -18,7 +18,7 @@ export const AddChatButton: FC = () => {
   }
 
   const handleConfirm = () => {
-    dispatch(newChat([chatName,username!]))
+    dispatch(newChat([chatName, username!]))
     setIsEditing(false)
     setChatName("")
   }
@@ -42,7 +42,11 @@ export const AddChatButton: FC = () => {
   }
 
   return (
-    <Button onClick={handleAddChat} className="w-full" disabled={username === undefined}>
+    <Button
+      onClick={handleAddChat}
+      className="w-full"
+      disabled={username === undefined}
+    >
       Add chat
     </Button>
   )

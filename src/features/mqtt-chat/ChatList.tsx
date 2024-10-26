@@ -5,7 +5,10 @@ import { Search } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import type { FC } from "react"
 import { useAppSelector } from "@/app/hooks"
-import { allChatMessages, mqttUsername } from "@/features/mqtt-chat/mqttChatSlice"
+import {
+  allChatMessages,
+  mqttUsername,
+} from "@/features/mqtt-chat/mqttChatSlice"
 import { AddChatButton } from "@/features/mqtt-chat/AddChatButton"
 
 interface ComponentProps {
@@ -14,7 +17,9 @@ interface ComponentProps {
 }
 
 export const ChatList: FC<ComponentProps> = ({ setActiveChat, activeChat }) => {
-  const chats = Object.entries(useAppSelector(allChatMessages)).map(([chatId, chat]) => ({chatId, chat}))
+  const chats = Object.entries(useAppSelector(allChatMessages)).map(
+    ([chatId, chat]) => ({ chatId, chat }),
+  )
   const username = useAppSelector(mqttUsername)
 
   return (

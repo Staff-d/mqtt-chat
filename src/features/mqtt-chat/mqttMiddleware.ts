@@ -5,13 +5,21 @@ import {
   clearProtocolError,
   connect,
   connected,
+  disconnect,
   disconnected,
   messageReceived,
-  mqttPublish, protocolError,
-  subscribeTopic
+  mqttPublish,
+  protocolError,
+  publishOnlineStatus,
+  subscribeTopic,
 } from "@/features/mqtt-chat/mqttChatSlice"
 import type { AppDispatch, RootState } from "@/app/store"
-import type { MQTTCredentials } from "@/features/mqtt-chat/messageTypes"
+import type {
+  MQTTCredentials,
+  WireStatusMessage,
+} from "@/features/mqtt-chat/messageTypes"
+import { DateTime } from "luxon"
+import { Buffer } from "buffer"
 
 export class MqttClientWrapper {
   private client: MqttClient | undefined = undefined
@@ -29,28 +37,36 @@ export class MqttClientWrapper {
       clientId: `mqtt-chat-client-${credentials.username}`,
       clean: false,
       manualConnect: true,
+      will: {
+        topic: `chat/status/${credentials.username}`,
+        payload: Buffer.from(
+          JSON.stringify({
+            status: `status/${credentials.username}`,
+            updateTimestamp: DateTime.now().toISO(),
+          }),
+        ),
+        qos: 0,
+        retain: true,
+      },
     })
 
     this.client.on("message", handler)
-    const connectionPromise = new Promise<void>(
-      (resolve,reject) =>  {
-        this.client!.on('connect', () => resolve())
-        this.client!.on("error", error => {
-          reject(error)
-        })
-      }
-    )
+    const connectionPromise = new Promise<void>((resolve, reject) => {
+      this.client!.on("connect", () => resolve())
+      this.client!.on("error", error => {
+        reject(error)
+      })
+    })
 
     // this manual connect() call is a workaround for the limitations of
     // connectAsync. connectAsync creates and connect the mqtt client at the same
     // time, but to be able to receive and process the stored QOS1/2 messages,
     // that are send by the broker as soon as we connect, we need to define
-    // as message callback first. This is not possible with connectAsync.
+    // a message callback first. This is not possible with connectAsync.
     this.client.connect()
-    try{
+    try {
       await connectionPromise
-    }
-    catch (e) {
+    } catch (e) {
       // for some reason we need to force-disconnect the
       // client before throwing the error, as otherwise
       // the client will continuously try to reconnect even
@@ -59,29 +75,61 @@ export class MqttClientWrapper {
       this.client = undefined
       throw e
     }
-  }
 
-  async disconnect() {
-    if (this.client) {
-      await this.client.endAsync()
-      this.client = undefined
+    const messagePayload: WireStatusMessage = {
+      status: "online",
+      lastOnlineTimestamp: DateTime.now().toISO(),
     }
+
+    await this.publish(
+      `chat/status/${credentials.username}`,
+      JSON.stringify(messagePayload),
+      { retain: true },
+    )
+
+    await this.subscribe(`chat/status/+`, 0)
   }
 
-  async subscribe(topic: string, subscribeQos: 0|1|2) {
+  async disconnect(username: string) {
+    if (!this.client) {
+      return
+    }
+    const messagePayload: WireStatusMessage = {
+      status: "offline",
+      lastOnlineTimestamp: DateTime.now().toISO(),
+    }
+
+    await this.publish(
+      `chat/status/${username}`,
+      JSON.stringify(messagePayload),
+      { retain: true },
+    )
+
+    await this.client.endAsync()
+    this.client = undefined
+  }
+
+  async subscribe(topic: string, subscribeQos: 0 | 1 | 2) {
     if (this.client) {
       console.log("subscribing to", topic)
       await this.client.subscribeAsync({
-        [topic] : {
-          qos: subscribeQos
-        }
+        [topic]: {
+          qos: subscribeQos,
+        },
       })
     }
   }
 
-  async publish(topic: string, message: string) {
+  async publish(
+    topic: string,
+    message: string,
+    options?: { qos?: 0 | 1 | 2; retain?: boolean },
+  ) {
     if (this.client) {
-      await this.client.publishAsync(topic, message)
+      await this.client.publishAsync(topic, message, {
+        qos: options?.qos ?? 0,
+        retain: options?.retain ?? false,
+      })
     }
   }
 }
@@ -111,10 +159,9 @@ typedStartListening({
     try {
       await client.connect(action.payload.credentials, handler)
     } catch (e) {
-
       console.log(e)
-      let errorMessage = 'Unknown Error'
-      if(e instanceof mqtt.ErrorWithReasonCode) {
+      let errorMessage = "Unknown Error"
+      if (e instanceof mqtt.ErrorWithReasonCode) {
         errorMessage = e.message
       }
 
@@ -124,6 +171,22 @@ typedStartListening({
     }
     api.dispatch(clearProtocolError())
     api.dispatch(connected())
+    api.dispatch(publishOnlineStatus({ status: "online" }))
+  },
+})
+
+typedStartListening({
+  actionCreator: disconnect,
+  effect: async (_action, api) => {
+    const { client } = api.extra
+    const username = api.getState().mqttChat.settings?.credentials.username
+    if (!username) {
+      return
+    }
+
+    await client.disconnect(username)
+
+    api.dispatch(disconnected())
   },
 })
 
@@ -133,7 +196,7 @@ typedStartListening({
     const { client } = api.extra
     const subscribeQos = api.getState().mqttChat.settings?.subscribeQos2 ? 2 : 0
 
-    await client.subscribe(action.payload,subscribeQos)
+    await client.subscribe(action.payload, subscribeQos)
   },
 })
 
@@ -146,5 +209,3 @@ typedStartListening({
     await client.publish(action.payload.topic, action.payload.payload)
   },
 })
-
-// typedStartListening

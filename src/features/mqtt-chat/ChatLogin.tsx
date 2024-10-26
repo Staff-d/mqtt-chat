@@ -12,13 +12,18 @@ import {
 } from "@/components/ui/card"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { AlertCircle, Loader2 } from "lucide-react"
-import { connect, mqttClientState, mqttProtocolError } from "@/features/mqtt-chat/mqttChatSlice"
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+  connect,
+  mqttClientState,
+  mqttProtocolError,
+} from "@/features/mqtt-chat/mqttChatSlice"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { MQTTCredentials } from "@/features/mqtt-chat/messageTypes"
 
@@ -32,7 +37,8 @@ export const ChatLogin: FC = () => {
 
   const connectionState = useAppSelector(mqttClientState)
   const error = useAppSelector(mqttProtocolError)
-  const isLoading = connectionState === "connecting"
+  const isLoading =
+    connectionState === "connecting" || connectionState === "disconnecting"
   const dispatch = useAppDispatch()
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,11 +49,13 @@ export const ChatLogin: FC = () => {
       credentials = { ...credentials, password }
     }
 
-    dispatch(connect({
-      credentials,
-      subscribeQos2,
-      deduplicateMessages
-    }))
+    dispatch(
+      connect({
+        credentials,
+        subscribeQos2,
+        deduplicateMessages,
+      }),
+    )
   }
 
   return (
@@ -72,7 +80,7 @@ export const ChatLogin: FC = () => {
                 required
               />
             </div>
-            {useAuthentication &&
+            {useAuthentication && (
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -84,7 +92,7 @@ export const ChatLogin: FC = () => {
                   required
                 />
               </div>
-            }
+            )}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Signing In..." : "Sign In"}

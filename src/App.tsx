@@ -1,9 +1,7 @@
 import "./App.css"
 import { ChatPage } from "@/features/mqtt-chat/ChatPage"
 import { useAppSelector } from "@/app/hooks"
-import {
-  mqttClientReady,
-} from "@/features/mqtt-chat/mqttChatSlice"
+import { mqttClientReady } from "@/features/mqtt-chat/mqttChatSlice"
 import { ChatLogin } from "@/features/mqtt-chat/ChatLogin"
 
 const App = () => {
