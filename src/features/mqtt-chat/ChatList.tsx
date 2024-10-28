@@ -52,8 +52,9 @@ export const ChatList: FC<ComponentProps> = ({ setActiveChat, activeChat }) => {
                     .join(",")}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {chat.messages.at(-1)?.content ?? ""}
-                  {""}
+                  {`${chat.messages.at(-1)?.content?.slice(0, 20)}${
+                    (chat.messages.at(-1)?.content?.length ?? 0) > 20 ? "…" : ""
+                  }` ?? ""}
                 </p>
               </div>
             </div>
