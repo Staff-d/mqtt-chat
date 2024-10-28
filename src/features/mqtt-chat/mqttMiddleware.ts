@@ -134,7 +134,6 @@ export class MqttClientWrapper {
 
   async subscribe(topic: string, subscribeQos: 0 | 1 | 2) {
     if (this.client) {
-      console.log("subscribing to", topic)
       await this.client.subscribeAsync({
         [topic]: {
           qos: subscribeQos,
@@ -193,7 +192,7 @@ typedStartListening({
         rawPacketHandler,
       )
     } catch (e) {
-      console.log(e)
+      console.error(e)
       let errorMessage = "Unknown Error"
       if (e instanceof mqtt.ErrorWithReasonCode) {
         errorMessage = e.message

@@ -107,7 +107,7 @@ export const mqttChatSlice = createAppSlice({
         ) {
           existingChat.messages.push(action.payload)
         } else {
-          console.log(`Message ${action.payload.messageId} already received`)
+          console.warn(`Message ${action.payload.messageId} already received`)
         }
       },
     ),
@@ -176,7 +176,6 @@ export const mqttMessageReceived =
 
     if (messageTopicMatch) {
       const { sendingUser, receivingUser } = messageTopicMatch.groups!
-      console.log(topic, sendingUser, receivingUser, messageTopicMatch)
       const wireMessage = wireMessageSchema.parse(JSON.parse(payload))
       const message: Message = {
         sender: sendingUser,
