@@ -36,6 +36,10 @@ export class MqttClientWrapper {
       return
     }
 
+    const willMessage: WireStatusMessage = {
+      status: "offline",
+      lastOnlineTimestamp: DateTime.now().toISO(),
+    }
     this.client = mqtt.connect("ws://localhost:8080", {
       ...credentials,
       clientId: `mqtt-chat-client-${credentials.username}`,
@@ -45,8 +49,7 @@ export class MqttClientWrapper {
         topic: `chat/status/${credentials.username}`,
         payload: Buffer.from(
           JSON.stringify({
-            status: `status/${credentials.username}`,
-            updateTimestamp: DateTime.now().toISO(),
+            willMessage,
           }),
         ),
         qos: 0,

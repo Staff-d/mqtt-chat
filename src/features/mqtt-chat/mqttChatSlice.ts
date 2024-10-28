@@ -39,15 +39,7 @@ const initialState: MqttChatSliceState = {
   chats: {
     "peter-sebastian": {
       participants: ["peter", "sebastian"],
-      messages: [
-        {
-          sender: "peter",
-          receiver: "sebastian",
-          timestamp: new Date().toISOString(),
-          content: "Hello there!",
-          messageId: "1",
-        },
-      ],
+      messages: [],
     },
   },
 }
