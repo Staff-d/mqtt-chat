@@ -43,19 +43,17 @@ export const ChatPage = () => {
         </div>
       </div>
 
-      {!showPackets && (
-        <div className="flex flex-row grow space-x-4 px-4 w-full h-11/12 pb-2">
-          <ChatList activeChat={activeChat} setActiveChat={setActiveChat} />
-          <div className="grow">
-            {activeChat && <ChatView activeChat={activeChat} />}
-          </div>
-        </div>
-      )}
-      {showPackets && (
-        <div className="flex flex-row grow space-x-4 px-4 w-full h-11/12 pb-2">
-          <PacketTable />
-        </div>
-      )}
+      <div className="flex flex-row grow space-x-4 px-4 w-full h-11/12 pb-2">
+        {!showPackets && (
+          <>
+            <ChatList activeChat={activeChat} setActiveChat={setActiveChat} />
+            <div className="grow">
+              {activeChat && <ChatView activeChat={activeChat} />}
+            </div>
+          </>
+        )}
+        {showPackets && <PacketTable />}
+      </div>
     </div>
   )
 }
