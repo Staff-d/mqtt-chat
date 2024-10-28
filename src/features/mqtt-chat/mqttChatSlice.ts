@@ -71,10 +71,8 @@ export const mqttChatSlice = createAppSlice({
     disconnect: create.reducer(state => {
       state.mqttClientState = "disconnecting"
     }),
-    disconnected: create.reducer(state => {
-      state.settings = undefined
-      state.mqttClientState = "disconnected"
-      state.mqttPackets = []
+    disconnected: create.reducer(() => {
+      return initialState
     }),
     protocolError: create.reducer((state, action: PayloadAction<string>) => {
       state.mqttError = action.payload
