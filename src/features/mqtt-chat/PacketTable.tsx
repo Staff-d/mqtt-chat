@@ -7,25 +7,12 @@ import { DataTable } from "@/components/ui/data-table"
 import { DateTime } from "luxon"
 import { ChevronsLeft, ChevronsRight, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import { PacketDetails } from "@/features/mqtt-chat/PacketDetails"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { PacketDetailsDrawer } from "@/features/mqtt-chat/PacketDetailsDrawer"
 
 type RawMqttPacketWithIndex = RawMqttPacket & { index: number }
 
@@ -111,6 +98,10 @@ const columnsBuilder: (
 
 export const PacketTable: FC = () => {
   const [detailDrawerSubject, setDetailDrawerSubject] = useState<string>("")
+  // for a normal component we could control the display state via the
+  // selectedPacketData only, but since the drawer plays a little
+  // animation when it closes this would cut the animation short
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState<boolean>(false)
   const [showPings, setShowPings] = useState<boolean>(true)
   const [showPacketDirection, setShowPacketDirection] = useState<
     "all" | "inbound" | "outbound"
@@ -140,7 +131,11 @@ export const PacketTable: FC = () => {
   )
 
   const columnDefinition = useMemo(
-    () => columnsBuilder(onPacketSelected),
+    () =>
+      columnsBuilder(messageId => {
+        onPacketSelected(messageId)
+        setDetailDrawerOpen(true)
+      }),
     [onPacketSelected],
   )
 
@@ -150,11 +145,6 @@ export const PacketTable: FC = () => {
         packet => `${packet.receptionId}` === detailDrawerSubject,
       ),
     [packetData, detailDrawerSubject],
-  )
-
-  const detailDrawerOpen = useMemo(
-    () => detailDrawerSubject !== "",
-    [detailDrawerSubject],
   )
 
   return (
@@ -200,53 +190,13 @@ export const PacketTable: FC = () => {
         </div>
         <DataTable columns={columnDefinition} data={filteredPacketData} />
       </Card>
-      <Drawer
-        open={detailDrawerOpen}
-        onClose={() => setDetailDrawerSubject("")}
-      >
-        <DrawerContent className="max-h-[80vh]">
-          <div className="flex flex-col w-full items-center overflow-y-scroll">
-            <div className="max-w-xl mx-2 px-2 w-full">
-              <DrawerHeader>
-                <DrawerTitle>
-                  Packet{" "}
-                  <span className="font-mono">
-                    {selectedPacketData?.packet.cmd}
-                  </span>
-                </DrawerTitle>
-              </DrawerHeader>
-              <Separator />
-
-              {selectedPacketData && (
-                <PacketDetails packet={selectedPacketData} />
-              )}
-
-              <Accordion
-                type={"single"}
-                collapsible={true}
-                className="w-full h-1/3 overflow-auto"
-              >
-                <AccordionItem value={"details"}>
-                  <AccordionTrigger>Expand details</AccordionTrigger>
-                  <AccordionContent className="bg-gray-100 p-4">
-                    <p className="font-mono whitespace-pre ">
-                      {JSON.stringify(selectedPacketData?.packet, null, 2)}
-                    </p>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              <DrawerFooter>
-                <Button
-                  variant={"outline"}
-                  onClick={() => setDetailDrawerSubject("")}
-                >
-                  Close
-                </Button>
-              </DrawerFooter>
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      {selectedPacketData && (
+        <PacketDetailsDrawer
+          open={detailDrawerOpen}
+          onClose={() => setDetailDrawerOpen(false)}
+          packetData={selectedPacketData}
+        />
+      )}
     </div>
   )
 }
