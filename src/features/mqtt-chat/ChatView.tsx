@@ -108,23 +108,25 @@ export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
               className={`flex ${message.sender === user ? "justify-end" : "justify-start"} mb-4`}
             >
               <div
-                className={`flex ${message.sender === user ? "flex-row-reverse" : "flex-row"} items-start`}
+                className={`flex flex-col ${message.sender === user ? "items-end" : "items-start"}`}
               >
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback>{message.sender[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
+                <div
+                  className={`flex ${message.sender === user ? "flex-row-reverse" : "flex-row"} items-baseline `}
+                >
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>{message.sender[0]}</AvatarFallback>
+                  </Avatar>
                   <div
                     className={`mx-2 p-3 rounded-lg bg-primary text-primary-foreground`}
                   >
                     {message.content}
                   </div>
-                  <span className="text-xs text-muted-foreground mx-2 mt-1">
-                    {DateTime.fromISO(message.timestamp).toLocaleString(
-                      DateTime.TIME_SIMPLE,
-                    )}
-                  </span>
                 </div>
+                <span className="text-xs text-muted-foreground mx-2 mt-1">
+                  {DateTime.fromISO(message.timestamp).toLocaleString(
+                    DateTime.TIME_SIMPLE,
+                  )}
+                </span>
               </div>
             </div>
           ))}
