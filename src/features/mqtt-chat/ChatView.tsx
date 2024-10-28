@@ -17,12 +17,11 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import {
   chatMessages,
   chatParticipants,
-  chatUserState,
   mqttUsername,
   sendChatMessage,
 } from "@/features/mqtt-chat/mqttChatSlice"
-import { Badge } from "@/components/ui/badge"
 import { DateTime } from "luxon"
+import { ChatUserStateBadge } from "@/features/mqtt-chat/ChatUserStateBadge"
 
 interface ComponentsProps {
   activeChat: string
@@ -30,27 +29,27 @@ interface ComponentsProps {
 
 export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
   const [newMessage, setNewMessage] = useState("")
+  const dispatch = useAppDispatch()
   const messages = useAppSelector(state => chatMessages(state, activeChat))
   const participants = useAppSelector(state =>
     chatParticipants(state, activeChat),
   )
-  const username = useAppSelector(mqttUsername)
-  const participantUserState = useAppSelector(state =>
-    chatUserState(
-      state,
-      participants.filter(participant => participant !== username)[0],
-    ),
-  )
-
-  const inputDisabled =
-    username === undefined || !participants.includes(username)
-
-  const dispatch = useAppDispatch()
   const user = useAppSelector(mqttUsername)
+
+  // the name of the chat partner. If this is not defined, the user is not
+  // a participant of this conversation
+  const chatPartner: string | undefined = participants.includes(user!)
+    ? participants.filter(participant => participant !== user)[0]
+    : undefined
+  const inputDisabled = chatPartner === undefined
 
   const handleSendMessage = () => {
     const trimmedMessage = newMessage.trim()
     if (trimmedMessage.length === 0) {
+      return
+    }
+
+    if (chatPartner === undefined) {
       return
     }
 
@@ -62,42 +61,36 @@ export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
           timestamp: now.toISOString(),
           messageId: uuidv4(),
         },
-        participants.filter(participant => participant !== username)[0],
+        chatPartner,
       ),
     )
     setNewMessage("")
   }
 
+  const titleContent =
+    chatPartner === undefined ? (
+      <>
+        Conversation between{" "}
+        {participants.map((participant, index) => (
+          <>
+            <span>{participant}</span>
+            (<ChatUserStateBadge username={participant} />)
+            {index < participants.length - 1 && <span>and</span>}
+          </>
+        ))}
+      </>
+    ) : (
+      <>
+        Conversation with {chatPartner}
+        <ChatUserStateBadge username={chatPartner} />
+      </>
+    )
+
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex flex-row align-baseline gap-2">
-          Conversation with{" "}
-          {participants.filter(participant => participant !== username)[0]}
-          {participantUserState?.status === "online" && (
-            <Badge
-              variant={"default"}
-              className={"bg-green-600 hover:bg-green-600"}
-            >
-              Online
-            </Badge>
-          )}
-          {participantUserState?.status === "offline" && (
-            <Badge
-              variant={"default"}
-              className={"bg-red-500 hover:bg-red-500"}
-            >
-              Offline
-            </Badge>
-          )}
-          {participantUserState === undefined && (
-            <Badge
-              variant={"default"}
-              className={"bg-gray-500 hover:bg-gray-500"}
-            >
-              Unknown
-            </Badge>
-          )}
+          {titleContent}
         </CardTitle>
       </CardHeader>
       <CardContent>
