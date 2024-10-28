@@ -32,7 +32,7 @@ export const ChatLogin: FC = () => {
   const [password, setPassword] = useState("")
 
   const [useAuthentication, setUseAuthentication] = useState(true)
-  const [subscribeQos2, setsubscribeQos2] = useState(false)
+  const [subscribeQos2, setSubscribeQos2] = useState(true)
   const [deduplicateMessages, setDeduplicateMessages] = useState(false)
 
   const connectionState = useAppSelector(mqttClientState)
@@ -124,7 +124,7 @@ export const ChatLogin: FC = () => {
                       id="subQOS2"
                       disabled={isLoading}
                       checked={subscribeQos2}
-                      onCheckedChange={state => setsubscribeQos2(!!state)}
+                      onCheckedChange={state => setSubscribeQos2(!!state)}
                     />
                     <Label htmlFor="subQOS2">Subscribe QOS2</Label>
                   </div>
