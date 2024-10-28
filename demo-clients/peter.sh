@@ -40,6 +40,6 @@ while true; do
 
     TOPIC_NAME="chat/messages/$LAST_SENDER/peter"
     echo "<-Sending message [$TOPIC_NAME]: $NEW_MESSAGE"
-    mosquitto_pub -h localhost -t "$TOPIC_NAME" -u peter -P test -m "$NEW_MESSAGE"
+    mosquitto_pub -h localhost -t "$TOPIC_NAME" -u peter -P test -q 1 -m "$NEW_MESSAGE"
 done
 

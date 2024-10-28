@@ -4,6 +4,7 @@ import { createAction, createSelector } from "@reduxjs/toolkit"
 import type {
   ApplicationSettings,
   Message,
+  RawMqttPacket,
   StatusMessage,
   WireMessage,
   WireStatusMessage,
@@ -28,10 +29,12 @@ export interface MqttChatSliceState {
   chats: { [chartId: string]: Chat }
   chatUserStates: { [userId: string]: WireStatusMessage }
   settings?: ApplicationSettings
+  mqttPackets: RawMqttPacket[]
 }
 
 const initialState: MqttChatSliceState = {
   mqttClientState: "disconnected",
+  mqttPackets: [],
   chatUserStates: {},
   chats: {
     "peter-sebastian": {
@@ -71,6 +74,7 @@ export const mqttChatSlice = createAppSlice({
     disconnected: create.reducer(state => {
       state.settings = undefined
       state.mqttClientState = "disconnected"
+      state.mqttPackets = []
     }),
     protocolError: create.reducer((state, action: PayloadAction<string>) => {
       state.mqttError = action.payload
@@ -78,6 +82,11 @@ export const mqttChatSlice = createAppSlice({
     clearProtocolError: create.reducer(state => {
       state.mqttError = undefined
     }),
+    mqttPacketReceived: create.reducer(
+      (state, action: PayloadAction<RawMqttPacket>) => {
+        state.mqttPackets.push(action.payload)
+      },
+    ),
     newChat: create.reducer(
       (state, action: PayloadAction<[string, string]>) => {
         const chatId = chatIdFromMessage(action.payload)
@@ -155,9 +164,12 @@ export const mqttSubscribe = createAction<string>(
   `${mqttChatSlice.name}/subscribeTopic`,
 )
 
-export const mqttPublish = createAction<{ topic: string; payload: string }>(
-  `${mqttChatSlice.name}/publish`,
-)
+export const mqttPublish = createAction<{
+  topic: string
+  payload: string
+  qos?: 0 | 1 | 2
+  retain?: boolean
+}>(`${mqttChatSlice.name}/publish`)
 
 export const publishOnlineStatus = createAction<{
   status: "online" | "offline"
@@ -227,6 +239,7 @@ export const sendChatMessage =
       mqttPublish({
         topic: `chat/messages/${to}/${user}`,
         payload: JSON.stringify(message),
+        qos: 1,
       }),
     )
   }
@@ -242,6 +255,7 @@ export const {
   newChat,
   protocolError,
   clearProtocolError,
+  mqttPacketReceived,
 } = mqttChatSlice.actions
 
 export const {

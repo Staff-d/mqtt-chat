@@ -1,5 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
 import type { MqttClient } from "mqtt"
+import { v4 as uuidv4 } from "uuid"
 import mqtt from "mqtt"
 import {
   clearProtocolError,
@@ -12,10 +13,12 @@ import {
   protocolError,
   publishOnlineStatus,
   mqttSubscribe,
+  mqttPacketReceived,
 } from "@/features/mqtt-chat/mqttChatSlice"
 import type { AppDispatch, RootState } from "@/app/store"
 import type {
   MQTTCredentials,
+  RawMqttPacket,
   WireStatusMessage,
 } from "@/features/mqtt-chat/messageTypes"
 import { DateTime } from "luxon"
@@ -26,7 +29,8 @@ export class MqttClientWrapper {
 
   async connect(
     credentials: MQTTCredentials,
-    handler: (topic: string, message: Buffer) => void,
+    messageHandler: (topic: string, message: Buffer) => void,
+    rawPacketHandler: (packet: RawMqttPacket) => void,
   ) {
     if (this.client) {
       return
@@ -50,7 +54,23 @@ export class MqttClientWrapper {
       },
     })
 
-    this.client.on("message", handler)
+    this.client.on("message", messageHandler)
+    this.client.on("packetreceive", packet => {
+      rawPacketHandler({
+        packet,
+        direction: "inbound",
+        receivedAt: DateTime.now().toISO(),
+        receptionId: uuidv4(),
+      })
+    })
+    this.client.on("packetsend", packet => {
+      rawPacketHandler({
+        packet,
+        direction: "outbound",
+        receivedAt: DateTime.now().toISO(),
+        receptionId: uuidv4(),
+      })
+    })
     const connectionPromise = new Promise<void>((resolve, reject) => {
       this.client!.on("connect", () => resolve())
       this.client!.on("error", error => {
@@ -149,15 +169,26 @@ typedStartListening({
   effect: async (action, api) => {
     const { client } = api.extra
 
-    const handler = (topic: string, message: Buffer) => {
+    const messageHandler = (topic: string, message: Buffer) => {
       const messageString = message.toString("utf-8")
-      console.log(topic, messageString)
-
       api.dispatch(mqttMessageReceived(topic, messageString))
     }
 
+    const rawPacketHandler = (mqttPacket: RawMqttPacket) => {
+      api.dispatch(
+        mqttPacketReceived({
+          ...mqttPacket,
+          packet: JSON.parse(JSON.stringify(mqttPacket.packet)),
+        }),
+      )
+    }
+
     try {
-      await client.connect(action.payload.credentials, handler)
+      await client.connect(
+        action.payload.credentials,
+        messageHandler,
+        rawPacketHandler,
+      )
     } catch (e) {
       console.log(e)
       let errorMessage = "Unknown Error"
@@ -205,7 +236,7 @@ typedStartListening({
   effect: async (action, api) => {
     const { client } = api.extra
 
-    console.log("publishing", action.payload)
-    await client.publish(action.payload.topic, action.payload.payload)
+    const { topic, payload, qos, retain } = action.payload
+    await client.publish(topic, payload, { qos, retain })
   },
 })

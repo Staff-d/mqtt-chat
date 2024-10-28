@@ -8,10 +8,13 @@ import {
 } from "@/features/mqtt-chat/mqttChatSlice"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { Button } from "@/components/ui/button"
+import { Toggle } from "@/components/ui/toggle"
+import { PacketTable } from "@/features/mqtt-chat/PacketTable"
 
 export const ChatPage = () => {
   const [activeChat, setActiveChat] = useState("")
   const username = useAppSelector(mqttUsername)
+  const [showPackets, setShowPackets] = useState(false)
 
   const dispatch = useAppDispatch()
   useEffect(() => {
@@ -26,18 +29,33 @@ export const ChatPage = () => {
     <div className="flex flex-col h-dvh w-full">
       <div className="flex flex-row w-full h-1/12 items-baseline justify-between px-4 py-2">
         <span className="text-2xl font-bold tracking-wide">MQTT Chat</span>
-        <Button variant={"outline"} onClick={() => dispatch(disconnect())}>
-          Logout
-        </Button>
+        <div className="flex flex-row gap-2">
+          <Toggle
+            variant={"outline"}
+            pressed={showPackets}
+            onPressedChange={() => setShowPackets(prev => !prev)}
+          >
+            Show Packets
+          </Toggle>
+          <Button variant={"outline"} onClick={() => dispatch(disconnect())}>
+            Logout
+          </Button>
+        </div>
       </div>
-      <div className="flex flex-row grow space-x-4 px-4 w-full h-11/12 pb-2">
-        <div className="w-1/3">
+
+      {!showPackets && (
+        <div className="flex flex-row grow space-x-4 px-4 w-full h-11/12 pb-2">
           <ChatList activeChat={activeChat} setActiveChat={setActiveChat} />
+          <div className="grow">
+            {activeChat && <ChatView activeChat={activeChat} />}
+          </div>
         </div>
-        <div className="w-2/3">
-          {activeChat && <ChatView activeChat={activeChat} />}
+      )}
+      {showPackets && (
+        <div className="flex flex-row grow space-x-4 px-4 w-full h-11/12 pb-2">
+          <PacketTable />
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -33,4 +33,12 @@ export interface ApplicationSettings {
   deduplicateMessages: boolean
 }
 
-export type RawMqttPacket = Packet
+export interface RawMqttPacket {
+  packet: Packet
+  direction: "inbound" | "outbound"
+  receivedAt: string
+  // Pingreq and Pingres packets don't have a messageId
+  // so we add our own id here to be able to reference
+  // these packages also
+  receptionId: string
+}

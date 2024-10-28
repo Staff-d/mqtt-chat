@@ -21,7 +21,7 @@ export const ChatList: FC<ComponentProps> = ({ setActiveChat, activeChat }) => {
   const username = useAppSelector(mqttUsername)
 
   return (
-    <Card className="h-full">
+    <Card className="h-full w-1/3 max-w-64">
       <CardHeader>
         <CardTitle>Chats</CardTitle>
         <AddChatButton />
