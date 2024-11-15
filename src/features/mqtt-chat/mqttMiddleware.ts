@@ -159,11 +159,7 @@ typedStartListening({
 
       will = {
         topic: `chat/status/${action.payload.credentials.username}`,
-        payload: Buffer.from(
-          JSON.stringify({
-            willMessage,
-          }),
-        ),
+        payload: Buffer.from(JSON.stringify(willMessage)),
         qos: 0,
         retain: true,
       }
