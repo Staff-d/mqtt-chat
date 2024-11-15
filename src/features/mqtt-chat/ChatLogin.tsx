@@ -1,4 +1,5 @@
-import type { FC } from "react"
+import type { FC, FormEvent } from "react"
+import { useEffect } from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,7 +33,8 @@ export const ChatLogin: FC = () => {
   const [password, setPassword] = useState("")
 
   const [useAuthentication, setUseAuthentication] = useState(true)
-  const [subscribeQos2, setSubscribeQos2] = useState(true)
+  const [useQos, setUseQos] = useState(true)
+  const [useStatusMessages, setUseStatusMessages] = useState(true)
   const [deduplicateMessages, setDeduplicateMessages] = useState(false)
 
   const connectionState = useAppSelector(mqttClientState)
@@ -41,7 +43,40 @@ export const ChatLogin: FC = () => {
     connectionState === "connecting" || connectionState === "disconnecting"
   const dispatch = useAppDispatch()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const params = new URLSearchParams(document.location.search)
+    if (params.size === 0) {
+      return
+    }
+    const scenario = params.get("scenario")
+    if (scenario === null) {
+      return
+    }
+    switch (scenario) {
+      case "stage-10":
+        setUseQos(false)
+        setUseStatusMessages(false)
+        setUseAuthentication(false)
+        break
+      case "stage-20":
+        setUseQos(true)
+        setUseStatusMessages(false)
+        setUseAuthentication(false)
+        break
+      case "stage-30":
+        setUseQos(true)
+        setUseStatusMessages(true)
+        setUseAuthentication(false)
+        break
+      case "stage-40":
+        setUseQos(true)
+        setUseStatusMessages(true)
+        setUseAuthentication(true)
+        break
+    }
+  }, [])
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
     let credentials: MQTTCredentials = { username }
@@ -51,8 +86,12 @@ export const ChatLogin: FC = () => {
 
     dispatch(
       connect({
+        brokerUrl: useAuthentication
+          ? "ws://localhost:8080"
+          : "ws://localhost:8081",
         credentials,
-        subscribeQos2,
+        useQos,
+        useStatusMessages,
         deduplicateMessages,
       }),
     )
@@ -112,6 +151,26 @@ export const ChatLogin: FC = () => {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="useQos"
+                      disabled={isLoading}
+                      checked={useQos}
+                      onCheckedChange={state => setUseQos(!!state)}
+                    />
+                    <Label htmlFor="useQos">Use QoS 1</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="useStatusMessages"
+                      disabled={isLoading}
+                      checked={useStatusMessages}
+                      onCheckedChange={state => setUseStatusMessages(!!state)}
+                    />
+                    <Label htmlFor="useStatusMessages">
+                      Use status messages
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
                       id="useAuth"
                       disabled={isLoading}
                       checked={useAuthentication}
@@ -121,21 +180,14 @@ export const ChatLogin: FC = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="subQOS2"
-                      disabled={isLoading}
-                      checked={subscribeQos2}
-                      onCheckedChange={state => setSubscribeQos2(!!state)}
-                    />
-                    <Label htmlFor="subQOS2">Subscribe QOS2</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
                       id="dedupMessages"
                       disabled={isLoading}
                       checked={deduplicateMessages}
                       onCheckedChange={state => setDeduplicateMessages(!!state)}
                     />
-                    <Label htmlFor="dedupMessages">Dedup Messages</Label>
+                    <Label htmlFor="dedupMessages">
+                      Deduplicate messages client side
+                    </Label>
                   </div>
                 </div>
               </AccordionContent>

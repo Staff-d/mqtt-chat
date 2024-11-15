@@ -1,5 +1,5 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit"
-import type { MqttClient } from "mqtt"
+import type { IClientOptions, MqttClient } from "mqtt"
 import { v4 as uuidv4 } from "uuid"
 import mqtt from "mqtt"
 import {
@@ -11,7 +11,6 @@ import {
   mqttMessageReceived,
   mqttPublish,
   protocolError,
-  publishOnlineStatus,
   mqttSubscribe,
   mqttPacketReceived,
 } from "@/features/mqtt-chat/mqttChatSlice"
@@ -28,33 +27,22 @@ export class MqttClientWrapper {
   private client: MqttClient | undefined = undefined
 
   async connect(
+    brokerUrl: string,
     credentials: MQTTCredentials,
     messageHandler: (topic: string, message: Buffer) => void,
     rawPacketHandler: (packet: RawMqttPacket) => void,
+    will?: IClientOptions["will"],
   ) {
     if (this.client) {
       return
     }
 
-    const willMessage: WireStatusMessage = {
-      status: "offline",
-      lastOnlineTimestamp: DateTime.now().toISO(),
-    }
-    this.client = mqtt.connect("ws://localhost:8080", {
+    this.client = mqtt.connect(brokerUrl, {
       ...credentials,
       clientId: `mqtt-chat-client-${credentials.username}`,
       clean: false,
       manualConnect: true,
-      will: {
-        topic: `chat/status/${credentials.username}`,
-        payload: Buffer.from(
-          JSON.stringify({
-            willMessage,
-          }),
-        ),
-        qos: 0,
-        retain: true,
-      },
+      will,
     })
 
     this.client.on("message", messageHandler)
@@ -98,35 +86,12 @@ export class MqttClientWrapper {
       this.client = undefined
       throw e
     }
-
-    const messagePayload: WireStatusMessage = {
-      status: "online",
-      lastOnlineTimestamp: DateTime.now().toISO(),
-    }
-
-    await this.publish(
-      `chat/status/${credentials.username}`,
-      JSON.stringify(messagePayload),
-      { retain: true },
-    )
-
-    await this.subscribe(`chat/status/+`, 0)
   }
 
-  async disconnect(username: string) {
+  async disconnect() {
     if (!this.client) {
       return
     }
-    const messagePayload: WireStatusMessage = {
-      status: "offline",
-      lastOnlineTimestamp: DateTime.now().toISO(),
-    }
-
-    await this.publish(
-      `chat/status/${username}`,
-      JSON.stringify(messagePayload),
-      { retain: true },
-    )
 
     await this.client.endAsync()
     this.client = undefined
@@ -185,11 +150,32 @@ typedStartListening({
       )
     }
 
+    let will: IClientOptions["will"] | undefined = undefined
+    if (action.payload.useStatusMessages) {
+      const willMessage: WireStatusMessage = {
+        status: "offline",
+        lastOnlineTimestamp: DateTime.now().toISO(),
+      }
+
+      will = {
+        topic: `chat/status/${action.payload.credentials.username}`,
+        payload: Buffer.from(
+          JSON.stringify({
+            willMessage,
+          }),
+        ),
+        qos: 0,
+        retain: true,
+      }
+    }
+
     try {
       await client.connect(
+        action.payload.brokerUrl,
         action.payload.credentials,
         messageHandler,
         rawPacketHandler,
+        will,
       )
     } catch (e) {
       console.error(e)
@@ -202,9 +188,25 @@ typedStartListening({
       api.dispatch(protocolError(errorMessage))
       return
     }
+
+    if (action.payload.useStatusMessages) {
+      const messagePayload: WireStatusMessage = {
+        status: "online",
+        lastOnlineTimestamp: DateTime.now().toISO(),
+      }
+
+      await client.publish(
+        `chat/status/${action.payload.credentials.username}`,
+        JSON.stringify(messagePayload),
+        { retain: true },
+      )
+
+      await client.subscribe(`chat/status/+`, 0)
+    }
+
     api.dispatch(clearProtocolError())
     api.dispatch(connected())
-    api.dispatch(publishOnlineStatus({ status: "online" }))
+    // api.dispatch(publishOnlineStatus({ status: "online" }))
   },
 })
 
@@ -213,11 +215,23 @@ typedStartListening({
   effect: async (_action, api) => {
     const { client } = api.extra
     const username = api.getState().mqttChat.settings?.credentials.username
-    if (!username) {
-      return
+    const useStatusMessages =
+      api.getState().mqttChat.settings?.useStatusMessages
+
+    if (useStatusMessages && username) {
+      const messagePayload: WireStatusMessage = {
+        status: "offline",
+        lastOnlineTimestamp: DateTime.now().toISO(),
+      }
+
+      await client.publish(
+        `chat/status/${username}`,
+        JSON.stringify(messagePayload),
+        { retain: true },
+      )
     }
 
-    await client.disconnect(username)
+    await client.disconnect()
 
     api.dispatch(disconnected())
   },
@@ -227,7 +241,7 @@ typedStartListening({
   actionCreator: mqttSubscribe,
   effect: async (action, api) => {
     const { client } = api.extra
-    const subscribeQos = api.getState().mqttChat.settings?.subscribeQos2 ? 2 : 0
+    const subscribeQos = api.getState().mqttChat.settings?.useQos ? 2 : 0
 
     await client.subscribe(action.payload, subscribeQos)
   },

@@ -19,6 +19,7 @@ import {
   chatParticipants,
   mqttUsername,
   sendChatMessage,
+  shouldUseChatStatus,
 } from "@/features/mqtt-chat/mqttChatSlice"
 import { DateTime } from "luxon"
 import { ChatUserStateBadge } from "@/features/mqtt-chat/ChatUserStateBadge"
@@ -35,6 +36,7 @@ export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
     chatParticipants(state, activeChat),
   )
   const user = useAppSelector(mqttUsername)
+  const displayChatStatus = useAppSelector(shouldUseChatStatus)
 
   // the name of the chat partner. If this is not defined, the user is not
   // a participant of this conversation
@@ -82,7 +84,7 @@ export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
     ) : (
       <>
         Conversation with {chatPartner}
-        <ChatUserStateBadge username={chatPartner} />
+        {displayChatStatus && <ChatUserStateBadge username={chatPartner} />}
       </>
     )
 

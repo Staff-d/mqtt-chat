@@ -124,6 +124,7 @@ export const mqttChatSlice = createAppSlice({
     allChatUserStates: mqttChat => mqttChat.chatUserStates,
     mqttCredentials: mqttChat => mqttChat.settings?.credentials,
     mqttProtocolError: mqttChat => mqttChat.mqttError,
+    shouldUseChatStatus: mqttChat => mqttChat.settings?.useQos ?? false,
   },
 })
 
@@ -216,6 +217,7 @@ export const sendChatMessage =
   (message: WireMessage, to: string): AppThunk =>
   (dispatch, getState) => {
     const user = mqttUsername(getState())
+    const qos = getState().mqttChat.settings?.useQos ? 1 : 0
     if (!user) {
       throw new Error("Not connected")
     }
@@ -228,7 +230,7 @@ export const sendChatMessage =
       mqttPublish({
         topic: `chat/messages/${to}/${user}`,
         payload: JSON.stringify(message),
-        qos: 1,
+        qos,
       }),
     )
   }
@@ -253,4 +255,5 @@ export const {
   allChatMessages,
   mqttProtocolError,
   allChatUserStates,
+  shouldUseChatStatus,
 } = mqttChatSlice.selectors

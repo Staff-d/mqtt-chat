@@ -29,7 +29,9 @@ export interface MQTTCredentials {
 
 export interface ApplicationSettings {
   credentials: MQTTCredentials
-  subscribeQos2: boolean
+  brokerUrl: string
+  useQos: boolean
+  useStatusMessages: boolean
   deduplicateMessages: boolean
 }
 
