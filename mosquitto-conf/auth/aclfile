@@ -1,0 +1,15 @@
+# Patterns affects all clients
+# Allow clients to write their own status
+pattern write chat/status/%u
+# Allow all clients to read other people's status
+pattern read chat/status/+
+
+# Allow clients to read their own messages
+pattern read chat/messages/%u/+
+# Allow clients to send messages to other
+# clients, as long as they use themselves as
+# the sender
+pattern write chat/messages/+/%u
+
+user backend
+topic write chat/messages/+/+/accepted
