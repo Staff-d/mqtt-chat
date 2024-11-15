@@ -48,27 +48,27 @@ export const ChatLogin: FC = () => {
     if (params.size === 0) {
       return
     }
-    const scenario = params.get("scenario")
+    const scenario = params.get("stage")
     if (scenario === null) {
       return
     }
     switch (scenario) {
-      case "stage-10":
+      case "10":
         setUseQos(false)
         setUseStatusMessages(false)
         setUseAuthentication(false)
         break
-      case "stage-20":
+      case "20":
         setUseQos(true)
         setUseStatusMessages(false)
         setUseAuthentication(false)
         break
-      case "stage-30":
+      case "30":
         setUseQos(true)
         setUseStatusMessages(true)
         setUseAuthentication(false)
         break
-      case "stage-40":
+      case "40":
         setUseQos(true)
         setUseStatusMessages(true)
         setUseAuthentication(true)
@@ -144,10 +144,14 @@ export const ChatLogin: FC = () => {
               </Alert>
             )}
           </form>
-          <Accordion type={"single"} collapsible={true}>
-            <AccordionItem value={"options"}>
+          <Accordion
+            type={"single"}
+            collapsible={true}
+            defaultValue={"options"}
+          >
+            <AccordionItem value={"options"} className="border-b-0">
               <AccordionTrigger>Options</AccordionTrigger>
-              <AccordionContent>
+              <AccordionContent className="pb-0">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
