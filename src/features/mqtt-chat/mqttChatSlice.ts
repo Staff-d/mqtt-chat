@@ -36,12 +36,7 @@ const initialState: MqttChatSliceState = {
   mqttClientState: "disconnected",
   mqttPackets: [],
   chatUserStates: {},
-  chats: {
-    "peter-sebastian": {
-      participants: ["peter", "sebastian"],
-      messages: [],
-    },
-  },
+  chats: {},
 }
 
 export const mqttChatSlice = createAppSlice({
