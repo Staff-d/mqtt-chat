@@ -1,28 +1,34 @@
 #!/usr/bin/env bash
-
 set -eu
 
-mosquitto_sub -h localhost -t chat/status/+ -u peter -P test -F '{"topic":"%t","payload":%p}' \
-  --will-qos 1 --will-retain --will-topic chat/status/peter --will-payload '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}' &
+VICTIM="$1"
+if [ -z "$VICTIM" ]; then
+  echo "Usage: $0 <victim>"
+  exit 1
+fi
+
+mosquitto_sub -h localhost -t chat/status/+ -u hannes -P test -F '{"topic":"%t","payload":%p}' \
+  --will-qos 1 --will-retain --will-topic chat/status/hannes --will-payload '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}' &
 STATUS_PID="$!"
 
 echo "$STATUS_PID"
 function exitTrap() {
     echo "Exiting..."
+    mosquitto_pub -h localhost -u hannes -P test -t chat/status/hannes \
+      -q 1 -m '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
     kill "$STATUS_PID"
 }
 trap exitTrap SIGINT
 
-mosquitto_pub -h localhost -u peter -P test -t chat/status/peter \
-  -q 1 -m '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
+mosquitto_pub -h localhost -u hannes -P test -t chat/status/hannes \
+  -q 1 -m '{"status":"online","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
 
-LAST_SENDER=$1
 
-if [ -z "$LAST_SENDER" ]; then
+if [ -z "$VICTIM" ]; then
   LAST_MESSAGE_AND_TOPIC=$(mosquitto_sub -h localhost -t chat/messages/hannes/+ -C 1 -u hannes -P test -F '{"topic":"%t","payload":%p}')
-  LAST_SENDER=$(echo "$LAST_MESSAGE_AND_TOPIC" | jq -r '.topic|split("/")|.[3]')
+  VICTIM=$(echo "$LAST_MESSAGE_AND_TOPIC" | jq -r '.topic|split("/")|.[3]')
 fi
-TOPIC_NAME="chat/messages/$LAST_SENDER/hannes"
+TOPIC_NAME="chat/messages/$VICTIM/hannes"
 
 
 while true; do

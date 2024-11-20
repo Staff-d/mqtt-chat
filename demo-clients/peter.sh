@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-
 set -eu
-set -o xtrace
 
 mosquitto_sub -h localhost -t chat/status/+ -u peter -P test -F '{"topic":"%t","payload":%p}' \
   --will-qos 1 --will-retain --will-topic chat/status/peter --will-payload '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}' &
