@@ -44,12 +44,9 @@ const initialState: MqttChatSliceState = {
   },
 }
 
-// If you are not using async thunks you can use the standalone `createSlice`.
 export const mqttChatSlice = createAppSlice({
   name: "mqttChat",
-  // `createSlice` will infer the state type from the `initialState` argument
   initialState,
-  // The `reducers` field lets us define reducers and generate associated actions
   reducers: create => ({
     connect: create.reducer(
       (state, action: PayloadAction<ApplicationSettings>) => {
@@ -122,20 +119,24 @@ export const mqttChatSlice = createAppSlice({
     mqttClientState: mqttChat => mqttChat.mqttClientState,
     allChatMessages: mqttChat => mqttChat.chats,
     allChatUserStates: mqttChat => mqttChat.chatUserStates,
-    mqttCredentials: mqttChat => mqttChat.settings?.credentials,
+    appSettings: mqttChat => mqttChat.settings,
     mqttProtocolError: mqttChat => mqttChat.mqttError,
-    shouldUseChatStatus: mqttChat => mqttChat.settings?.useStatusMessages ?? false,
   },
 })
 
+/**
+ * additional selectors for nested values
+ */
+export const mqttCredentials = createSelector(
+  [mqttChatSlice.selectors.appSettings],
+  settings => settings?.credentials,
+)
+
 export const mqttUsername = createSelector(
-  [mqttChatSlice.selectors.mqttCredentials],
+  [mqttCredentials],
   credentials => credentials?.username,
 )
-export const visibleChats = createSelector(
-  [mqttChatSlice.selectors.allChatMessages],
-  messages => Object.keys(messages),
-)
+
 export const chatMessages = createSelector(
   [mqttChatSlice.selectors.allChatMessages, (state, chatId) => chatId],
   (chatMessages, chatId) => chatMessages[chatId].messages || [],
@@ -151,6 +152,14 @@ export const chatParticipants = createSelector(
   (chatMessages, chatId) => chatMessages[chatId].participants || [],
 )
 
+export const shouldUseChatStatus = createSelector(
+  [mqttChatSlice.selectors.appSettings],
+  settings => settings?.useStatusMessages ?? false,
+)
+
+/**
+ * additional actions
+ */
 export const mqttSubscribe = createAction<string>(
   `${mqttChatSlice.name}/subscribeTopic`,
 )
@@ -162,10 +171,12 @@ export const mqttPublish = createAction<{
   retain?: boolean
 }>(`${mqttChatSlice.name}/publish`)
 
-export const publishOnlineStatus = createAction<{
-  status: "online" | "offline"
-}>(`${mqttChatSlice.name}/updateStatus`)
+/**
+ * thunks
+ */
 
+// this thunk maps the messages that we receive
+// via MQTT to actions that are dispatched to the store
 export const mqttMessageReceived =
   (topic: string, payload: string): AppThunk =>
   dispatch => {
@@ -200,6 +211,7 @@ export const mqttMessageReceived =
     }
   }
 
+// this thunk is used to subscribe to inbound chat messages
 export const subscribeChatMessages = (): AppThunk => (dispatch, getState) => {
   const user = mqttUsername(getState())
   if (!user) {
@@ -235,7 +247,6 @@ export const sendChatMessage =
     )
   }
 
-// Action creators are generated for each case reducer function.
 export const {
   connect,
   connected,
@@ -255,5 +266,4 @@ export const {
   allChatMessages,
   mqttProtocolError,
   allChatUserStates,
-  shouldUseChatStatus,
 } = mqttChatSlice.selectors

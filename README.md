@@ -26,23 +26,26 @@ to install the dependencies and either run
 ```
 docker compose up -d
 ```
-or 
+
+or
+
 ```
 nix-build brokers.nix
 ./result/bin/mosquittos
 ```
+
 to spin up the MQTT broker(s).
 
 ```
 npm run dev
 ```
 
-start the development server. The application should be served at `http://localhost:5173/`.
+starts the development server. The application should be served at `http://localhost:5173/`.
 
 ## Configuration
 
 The application offers a few settings that configure the features that are available. These
-settings corrospond to the chapters in my blogpost
+settings correspond to the chapters in my blogpost
 
 ![login mask](login.png "Login mask with expanded options")
 
@@ -80,11 +83,26 @@ previously registered with the broker. The following usernames are available wit
 Each user has the password `test`. There is also an additional admin user which can read all messages with
 the username `admin` and password `test`.
 
-### About the template
+## Project structure
 
-This project uses [Vite](https://vitejs.dev/), 
-[Vitest](https://vitest.dev/), and 
-[React Testing Library](https://github.com/testing-library/react-testing-library) to create a modern 
+If you are interested in the processing of MQTT messages, there are three places in the code where you can
+start looking:
+
+- `src/features/mqtt-chat/MqttClientWrapper.ts` provides a wrapper around the
+  [mqtt.js](https://www.npmjs.com/package/mqtt) lib that I am using to connect to the MQTT broker.
+- `src/features/mqtt-chat/mqttChatSlice.ts` contains the redux slice that manages the chat messages.
+  The actions defined there are used in the rest of the application to interact with MQTT.
+- `src/features/mqtt-chat/mqttMiddleware.ts` maps the redux actions to MQTT commands and vice versa. It also manages
+  the client instance and dispatches connection lifecycle events to the chat slice.
+
+A good entrypoint to look into the workings of the frontend components would either be the
+`src/features/mqtt-chat/ChatPage.tsx` or the `src/features/mqtt-chat/ChatLogin.tsx` component.
+
+### About the project template
+
+This project uses [Vite](https://vitejs.dev/),
+[Vitest](https://vitest.dev/), and
+[React Testing Library](https://github.com/testing-library/react-testing-library) to create a modern
 [React](https://react.dev/) app compatible with [Create React App](https://create-react-app.dev/)
 
 It was set up using the vite template for redux with the following command:
