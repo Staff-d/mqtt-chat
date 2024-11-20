@@ -11,5 +11,6 @@ pattern read chat/messages/%u/+
 # the sender
 pattern write chat/messages/+/%u
 
-user backend
-topic write chat/messages/+/+/accepted
+# Allow the admin user to read all messages
+user admin
+topic read chat/messages/+/+

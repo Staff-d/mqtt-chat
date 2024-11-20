@@ -180,7 +180,7 @@ export const ChatLogin: FC = () => {
                       checked={useAuthentication}
                       onCheckedChange={state => setUseAuthentication(!!state)}
                     />
-                    <Label htmlFor="useAuth">Use Authentication</Label>
+                    <Label htmlFor="useAuth">Use authentication</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox

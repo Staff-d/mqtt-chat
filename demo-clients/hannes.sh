@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 
 set -eu
-#set -o xtrace
-#
-#mosquitto_sub -h localhost -t chat/status/+ -u peter -P test -F '{"topic":"%t","payload":%p}' \
-#  --will-qos 1 --will-retain --will-topic chat/status/peter --will-payload '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}' &
-#STATUS_PID="$!"
-#
-#echo "$STATUS_PID"
-#function exitTrap() {
-#    echo "Exiting..."
-#    kill "$STATUS_PID"
-#}
-#trap exitTrap SIGINT
 
-#mosquitto_pub -h localhost -u peter -P test -t chat/status/peter \
-#  -q 1 -m '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
+mosquitto_sub -h localhost -t chat/status/+ -u peter -P test -F '{"topic":"%t","payload":%p}' \
+  --will-qos 1 --will-retain --will-topic chat/status/peter --will-payload '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}' &
+STATUS_PID="$!"
+
+echo "$STATUS_PID"
+function exitTrap() {
+    echo "Exiting..."
+    kill "$STATUS_PID"
+}
+trap exitTrap SIGINT
+
+mosquitto_pub -h localhost -u peter -P test -t chat/status/peter \
+  -q 1 -m '{"status":"offline","lastOnlineTimestamp":"'"$(date -Iseconds)"'"}'
 
 LAST_SENDER=$1
 

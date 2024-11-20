@@ -124,7 +124,7 @@ export const mqttChatSlice = createAppSlice({
     allChatUserStates: mqttChat => mqttChat.chatUserStates,
     mqttCredentials: mqttChat => mqttChat.settings?.credentials,
     mqttProtocolError: mqttChat => mqttChat.mqttError,
-    shouldUseChatStatus: mqttChat => mqttChat.settings?.useQos ?? false,
+    shouldUseChatStatus: mqttChat => mqttChat.settings?.useStatusMessages ?? false,
   },
 })
 

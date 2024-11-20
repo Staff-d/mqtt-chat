@@ -9,7 +9,7 @@ services:
   unauthenticated-mosquitto:
     image: "eclipse-mosquitto:2.0.20"
     ports:
-      - "18830:1883"
-      - "8081:8080"
+      - "18830:18830"
+      - "8081:8081"
     volumes:
       - ./mosquitto-conf/unauth:/mosquitto/config:ro

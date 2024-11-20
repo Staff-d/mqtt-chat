@@ -76,7 +76,7 @@ export const ChatView: FC<ComponentsProps> = ({ activeChat }) => {
         {participants.map((participant, index) => (
           <>
             <span>{participant}</span>
-            (<ChatUserStateBadge username={participant} />)
+            {displayChatStatus && <ChatUserStateBadge username={participant} />}
             {index < participants.length - 1 && <span>and</span>}
           </>
         ))}
