@@ -5,8 +5,6 @@ It is used as a demonstration of the capabilities of the protocol and how they c
 
 This projects accompanies my talk and [blog post](http://sebastian-staffa.eu/posts/mqtt-for-webdevs) of the same name.
 
-Uses [Vite](https://vitejs.dev/), [Vitest](https://vitest.dev/), and [React Testing Library](https://github.com/testing-library/react-testing-library) to create a modern [React](https://react.dev/) app compatible with [Create React App](https://create-react-app.dev/)
-
 ## Setup
 
 This project requires
@@ -78,12 +76,18 @@ previously registered with the broker. The following usernames are available wit
 - vy
 - minh
 - jenny
-  Each user has the password `test`. There is also an additional admin user which can read all messages with
-  the username `admin` and password `test`.
+
+Each user has the password `test`. There is also an additional admin user which can read all messages with
+the username `admin` and password `test`.
 
 ### About the template
 
-This project was set up using the vite template for redux with the following command:
+This project uses [Vite](https://vitejs.dev/), 
+[Vitest](https://vitest.dev/), and 
+[React Testing Library](https://github.com/testing-library/react-testing-library) to create a modern 
+[React](https://react.dev/) app compatible with [Create React App](https://create-react-app.dev/)
+
+It was set up using the vite template for redux with the following command:
 
 ```sh
 npx degit reduxjs/redux-templates/packages/vite-template-redux my-app
